@@ -1,0 +1,28 @@
+// swift-tools-version:6.0
+
+import PackageDescription
+
+let _: Package =
+  .init(name: "Cursor",
+        platforms: [
+          .macOS(.v14),
+        ],
+        products: [
+          .executable(name: "VTDemo", targets: ["VTDemo"]),
+        ],
+        dependencies: [
+          .package(url: "https://github.com/compnerd/swift-platform-core.git", branch: "main"),
+        ],
+        targets: [
+          .target(name: "Geometry"),
+          .target(name: "Primitives"),
+          .target(name: "VirtualTerminal", dependencies: [
+            .target(name: "Geometry"),
+            .target(name: "Primitives"),
+            .product(name: "POSIXCore", package: "swift-platform-core", condition: .when(platforms: [.macOS, .linux])),
+            .product(name: "WindowsCore", package: "swift-platform-core", condition: .when(platforms: [.windows])),
+          ]),
+          .executableTarget(name: "VTDemo", dependencies: [
+            .target(name: "VirtualTerminal"),
+          ]),
+        ])

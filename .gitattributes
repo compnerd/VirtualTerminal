@@ -1,0 +1,3 @@
+*.swift text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
