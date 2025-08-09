@@ -302,8 +302,8 @@ extension VTInputParser {
       input = buffer
       return parse(next: &input)
 
-    case 0x38: // ';' (Parameter Separator)
-      state = .CSI(parameters: parameters + [0], intermediate: intermediate)
+    case 0x3b: // ';' (Parameter Separator)
+      state = .CSI(parameters: parameters, intermediate: intermediate)
       input = input.dropFirst()
       return parse(next: &input)
 
