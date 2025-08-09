@@ -82,6 +82,34 @@ let style = VTStyle(foreground: .rgb(red: 255, green: 100, blue: 50),
 buffer.write("Styled text", at: position, style: style)
 ```
 
+### Structured Terminal Control Sequences
+
+Beyond high-level UI rendering, VirtualTerminal provides a structured, type-safe API for formulating terminal escape sequences. Rather than hardcoding string literals like `"\033[31;1m"`, you express terminal commands using semantic Swift types.
+
+The `ControlSequence` enum covers ISO 6429/ECMA-48 compliant terminal operations:
+
+```swift
+import VirtualTerminal
+
+// Type-safe cursor positioning and styling
+await terminal <<< .CursorPosition(10, 20)
+await terminal <<< .SelectGraphicRendition([.bold, .foreground(.red)])
+await terminal <<< "Important text"
+await terminal <<< .SelectGraphicRendition([.reset])
+
+// Structured screen manipulation
+await terminal <<< .EraseDisplay(.EntireDisplay)
+await terminal <<< .SetMode([.DEC(.UseAlternateScreenBuffer)])
+```
+
+This approach offers:
+- **Semantic clarity**: Express intent with Swift types, not escape code memorization
+- **Compile-time validation**: Prevents malformed sequences and parameter errors
+- **Encoding abstraction**: Handles 7-bit vs 8-bit encoding automatically
+- **Composability**: Chain operations with fluent syntax using the `<<<` operator
+
+The library generates correct ANSI/VT100 escape sequences from these structured commands, making it both a UI toolkit and a robust terminal control sequence generator.
+
 ## Installation
 
 Add to your `Package.swift`:
