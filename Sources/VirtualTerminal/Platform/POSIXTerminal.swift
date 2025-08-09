@@ -3,6 +3,10 @@
 
 #if !os(Windows)
 
+#if canImport(Glibc)
+import Glibc
+#endif
+
 import Geometry
 import POSIXCore
 import Primitives
@@ -182,10 +186,18 @@ internal final actor POSIXTerminal: VTTerminal {
     switch mode {
     case .raw:
       // Disable canonical mode, echo, XON/XOFF, and CR to NL translation
+      #if os(Linux)
+      attr.c_lflag &= UInt32(~(UInt32(ICANON | ECHO | IXON | ICRNL)))
+      #else
       attr.c_lflag &= ~(ICANON | ECHO | IXON | ICRNL)
+      #endif
     case .canonical:
       // Enable canonical mode, echo, XON/XOFF, and CR to NL translation
+      #if os(Linux)
+      attr.c_lflag |= UInt32(ICANON | ECHO | IXON | ICRNL)
+      #else
       attr.c_lflag |= (ICANON | ECHO | IXON | ICRNL)
+      #endif
     }
 
     guard tcsetattr(hOut, TCSANOW, &attr) == 0 else {
@@ -193,7 +205,7 @@ internal final actor POSIXTerminal: VTTerminal {
     }
 
     var ws = winsize()
-    guard ioctl(hOut, TIOCGWINSZ, &ws) == 0 else {
+    guard ioctl(hOut, UInt(TIOCGWINSZ), &ws) == 0 else {
       throw POSIXError()
     }
 
@@ -236,7 +248,7 @@ internal final actor POSIXTerminal: VTTerminal {
   deinit {
     // Restore the original terminal attributes on deinitialization
     var attr = self.sAttributes
-    _ = tcsetattr(self.hOut, TCSANOW, &attr)
+    _ = tcsetattr(self.hOut, TCSAFLUSH, &attr)
   }
 
   /// Writes string data directly to the terminal output.
@@ -278,7 +290,11 @@ internal final actor POSIXTerminal: VTTerminal {
   /// - Screen clearing and scrolling commands
   /// - Other VT100/ANSI control sequences
   public func write(_ string: String) {
+    #if canImport(Glibc)
+    _ = Glibc.write(self.hOut, string, string.utf8.count)
+    #else
     _ = unistd.write(self.hOut, string, string.utf8.count)
+    #endif
   }
 }
 

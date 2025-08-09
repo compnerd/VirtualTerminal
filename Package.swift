@@ -12,7 +12,7 @@ let _: Package =
           .library(name: "VirtualTerminal", targets: ["VirtualTerminal"]),
         ],
         dependencies: [
-          .package(url: "https://github.com/compnerd/swift-platform-core.git", branch: "main"),
+          .package(url: "https://github.com/zaneenders/swift-platform-core.git", branch: "zane-asahi-linux-patch"),
         ],
         targets: [
           .target(name: "Geometry"),

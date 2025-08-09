@@ -27,7 +27,7 @@ private typealias NativeLock = pthread_mutex_t
 ///
 /// The lock is `~Copyable` to prevent accidental duplication which
 /// could lead to synchronization issues.
-public struct UnfairLock: ~Copyable, Sendable {
+public final class UnfairLock: @unchecked Sendable {
   private var storage: NativeLock = NativeLock()
 
   /// Creates a new lock.
@@ -40,7 +40,11 @@ public struct UnfairLock: ~Copyable, Sendable {
     var attr = pthread_mutexattr_t()
     pthread_mutexattr_init(&attr)
     defer { pthread_mutexattr_destroy(&attr) }
+    #if os(macOS)
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL)
+    #elseif os(Linux)
+    pthread_mutexattr_settype(&attr, Int32(PTHREAD_MUTEX_NORMAL))
+    #endif
     pthread_mutex_init(&storage, &attr)
     #endif
   }
@@ -63,7 +67,7 @@ public struct UnfairLock: ~Copyable, Sendable {
   /// - Parameter body: The closure to execute while holding the lock.
   /// - Returns: The value returned by the closure.
   /// - Throws: Any error thrown by the closure.
-  public mutating func withLock<T>(_ body: () throws -> T) rethrows -> T {
+  public func withLock<T>(_ body: () throws -> T) rethrows -> T {
     #if os(Windows)
     AcquireSRWLockExclusive(&storage)
     defer { ReleaseSRWLockExclusive(&storage) }
@@ -82,7 +86,7 @@ public struct UnfairLock: ~Copyable, Sendable {
   ///
   /// - Returns: `true` if the lock was successfully acquired, `false` otherwise.
   /// - Note: If this returns `true`, you must call `unlock()` to release the lock.
-  public mutating func tryLock() -> Bool {
+  public func tryLock() -> Bool {
     #if os(Windows)
     return TryAcquireSRWLockExclusive(&storage) != 0
     #elseif os(macOS)
@@ -96,7 +100,7 @@ public struct UnfairLock: ~Copyable, Sendable {
   ///
   /// - Warning: You must call `unlock()` to release the lock.
   ///   Prefer `withLock(_:)` for automatic lock management.
-  public mutating func lock() {
+  public func lock() {
     #if os(Windows)
     AcquireSRWLockExclusive(&storage)
     #elseif os(macOS)
@@ -111,7 +115,7 @@ public struct UnfairLock: ~Copyable, Sendable {
   /// - Warning: This should only be called if you previously called `lock()` or
   ///   `tryLock()` returned `true`. Calling this without holding the lock
   ///   results in undefined behavior.
-  public mutating func unlock() {
+  public func unlock() {
     #if os(Windows)
     ReleaseSRWLockExclusive(&storage)
     #elseif os(macOS)
@@ -130,7 +134,7 @@ public struct UnfairLock: ~Copyable, Sendable {
   /// - Parameter body: The closure to execute if the lock is acquired.
   /// - Returns: The value returned by the closure, or `nil` if the lock could not be acquired.
   /// - Throws: Any error thrown by the closure.
-  public mutating func withLockIfAvailable<T>(_ body: () throws -> T) rethrows -> T? {
+  public func withLockIfAvailable<T>(_ body: () throws -> T) rethrows -> T? {
     guard tryLock() else { return nil }
     defer { unlock() }
     return try body()

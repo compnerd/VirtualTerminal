@@ -3,6 +3,8 @@
 
 #if os(Windows)
 import WindowsCore
+#elseif os(Linux)
+import Glibc
 #else
 import POSIXCore
 import Primitives
@@ -79,6 +81,8 @@ extension UnicodeScalar {
       return isWideCharacter ? 2 : 1
     }
     return CharType & C3_FULLWIDTH == C3_FULLWIDTH ? 2 : 1
+#elseif os(Linux)
+    return 1 //  wcwidth_l and Locale.ID_UTF8 not exposed from Glibc
 #else
     // Control character or invalid - zero width    -> -1
     // Zero-width character (combining marks, etc.) -> 0
