@@ -9,6 +9,7 @@ let _: Package =
         ],
         products: [
           .executable(name: "VTDemo", targets: ["VTDemo"]),
+          .library(name: "VirtualTerminal", targets: ["VirtualTerminal"]),
         ],
         dependencies: [
           .package(url: "https://github.com/compnerd/swift-platform-core.git", branch: "main"),
