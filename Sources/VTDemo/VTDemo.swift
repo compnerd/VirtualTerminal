@@ -190,7 +190,7 @@ private struct Menu: Scene {
     buffer.write(string: subtitle,
                  at: VTPosition(row: buffer.size.height / 4 + 1,
                                 column: (buffer.size.width - subtitle.width) / 2),
-                 style: VTStyle(foreground: .ansi(.init(color: .cyan, intensity: .bright)),
+                 style: VTStyle(foreground: .ansi(.cyan, intensity: .bright),
                                 attributes: [.bold]))
 
     // Render the menu options

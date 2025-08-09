@@ -48,15 +48,14 @@ extension VTAttributes {
   }
 }
 
-private func pack(_ color: VTColor) -> UInt64 {
-  return switch color {
-  case let .rgb(red, green, blue):
-    // [23-16: red][15-8: green][7-0: blue]
-    (UInt64(red) << 16) | (UInt64(green) << 8) | (UInt64(blue) << 0)
-  case let .ansi(color):
-    // [23-9: reserved][8: intensity][7-0: color]
-    (UInt64(color.intensity == .bright ? 1 : 0) << 8) | (UInt64(color.color.rawValue) & 0xff)
-  }
+private func pack(_ color: ANSIColor, _ intensity: ANSIColorIntensity) -> UInt64 {
+  // [23-9: reserved][8: intensity][7-0: color]
+  return (UInt64(intensity == .bright ? 1 : 0) << 8) | (UInt64(color.rawValue) & 0xff)
+}
+
+private func pack(_ red: UInt8, _ green: UInt8, _ blue: UInt8) -> UInt64 {
+  // [23-16: red][15-8: green][7-0: blue]
+  return (UInt64(red) << 16) | (UInt64(green) << 8) | (UInt64(blue) << 0)
 }
 
 private struct Flags: OptionSet {
@@ -121,22 +120,22 @@ public struct VTStyle: Sendable, Equatable {
   public init(foreground: VTColor? = nil, background: VTColor? = nil, attributes: VTAttributes = []) {
     var representation = (UInt64(attributes.rawValue) << 8)
 
-    if let foreground {
-      switch foreground {
-      case .ansi(_):
-        representation |= (pack(foreground) << 16) | UInt64(Flags.ANSIForeground.rawValue)
-      case .rgb(_, _, _):
-        representation |= (pack(foreground) << 16) | UInt64(Flags.RGBForeground.rawValue)
-      }
+    switch foreground {
+    case .none:
+      representation |= (pack(ANSIColor.default, .normal) << 16) | UInt64(Flags.ANSIForeground.rawValue)
+    case let .some(.ansi(color, intensity)):
+      representation |= (pack(color, intensity) << 16) | UInt64(Flags.ANSIForeground.rawValue)
+    case let .some(.rgb(red, green, blue)):
+      representation |= (pack(red, green, blue) << 16) | UInt64(Flags.RGBForeground.rawValue)
     }
 
-    if let background {
-      switch background {
-      case .ansi(_):
-        representation |= (pack(background) << 40) | UInt64(Flags.ANSIBackground.rawValue)
-      case .rgb(_, _, _):
-        representation |= (pack(background) << 40) | UInt64(Flags.RGBBackground.rawValue)
-      }
+    switch background {
+    case .none:
+      representation |= (pack(ANSIColor.default, .normal) << 40) | UInt64(Flags.ANSIBackground.rawValue)
+    case let .some(.ansi(color, intensity)):
+      representation |= (pack(color, intensity) << 40) | UInt64(Flags.ANSIBackground.rawValue)
+    case let .some(.rgb(red, green, blue)):
+      representation |= (pack(red, green, blue) << 40) | UInt64(Flags.RGBBackground.rawValue)
     }
 
     self.representation = representation
@@ -148,12 +147,12 @@ public struct VTStyle: Sendable, Equatable {
 
     if flags.contains(.ANSIForeground) {
       let bits = representation >> 16
-      guard let color = ANSIColorIdentifier(rawValue: (Int(bits) & 0xff)) else {
+      guard let color = ANSIColor(rawValue: (Int(bits) & 0xff)) else {
         return nil
       }
       let intensity = (bits >> 8) & 1 == 1 ? ANSIColorIntensity.bright
                                            : ANSIColorIntensity.normal
-      return .ansi(ANSIColor(color: color, intensity: intensity))
+      return .ansi(color, intensity: intensity)
     }
 
     if flags.contains(.RGBForeground) {
@@ -174,12 +173,12 @@ public struct VTStyle: Sendable, Equatable {
 
     if flags.contains(.ANSIBackground) {
       let bits = representation >> 40
-      guard let color = ANSIColorIdentifier(rawValue: (Int(bits) & 0xff)) else {
+      guard let color = ANSIColor(rawValue: (Int(bits) & 0xff)) else {
         return nil
       }
       let intensity = (bits >> 8) & 1 == 1 ? ANSIColorIntensity.bright
                                             : ANSIColorIntensity.normal
-      return .ansi(ANSIColor(color: color, intensity: intensity))
+      return .ansi(color, intensity: intensity)
     }
 
     if flags.contains(.RGBBackground) {

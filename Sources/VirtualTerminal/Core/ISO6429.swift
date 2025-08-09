@@ -282,8 +282,8 @@ extension GraphicRendition: CustomStringConvertible {
     case .NotCrossedOut: "29"
     case .Foreground(let color):
       switch color {
-        case .ansi(let color):
-          switch (color.color, color.intensity) {
+        case .ansi(let color, let intensity):
+          switch (color, intensity) {
             case (.black, .normal): "30"
             case (.red, .normal): "31"
             case (.green, .normal): "32"
@@ -311,8 +311,8 @@ extension GraphicRendition: CustomStringConvertible {
       }
     case .Background(let color):
       switch color {
-        case .ansi(let color):
-          switch (color.color, color.intensity) {
+        case .ansi(let color, let intensity):
+          switch (color, intensity) {
             case (.black, .normal): "40"
             case (.red, .normal): "41"
             case (.green, .normal): "42"
@@ -333,6 +333,7 @@ extension GraphicRendition: CustomStringConvertible {
             case (.white, .bright): "107"
             case (.default, .bright): "109"
           }
+
         case .rgb(let red, let green, let blue):
           // 48;2;<r>;<g>;<b>
           "48;2;\(Int(red));\(Int(green));\(Int(blue))"

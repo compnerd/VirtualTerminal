@@ -7,7 +7,7 @@
 /// has been supported since early terminal systems. The actual appearance
 /// of these colors depends on the terminal's color scheme and user
 /// customization.
-public enum ANSIColorIdentifier: Int, Equatable, Sendable {
+public enum ANSIColor: Int, Equatable, Sendable {
   case black
   case red
   case green
@@ -31,84 +31,6 @@ public enum ANSIColorIntensity: Equatable, Sendable {
   case normal
   /// Bright or bold color intensity.
   case bright
-}
-
-/// An ANSI color with optional intensity variation.
-///
-/// ANSI colors provide excellent terminal compatibility since they're
-/// supported by virtually all terminal emulators. They automatically
-/// adapt to user color schemes and accessibility settings.
-///
-/// ## Usage Examples
-///
-/// ```swift
-/// // Standard colors
-/// let ANSIRed = ANSIColor(color: .red, intensity: .normal)
-/// let ANSIBrightBlue = ANSIColor(color: .blue, intensity: .bright)
-///
-/// // Using convenience properties
-/// let default = ANSIColor.default
-/// let ANSIBrightGreen = ANSIColor(color: .green, intensity: .bright)
-/// ```
-public struct ANSIColor: Equatable, Hashable, Sendable {
-  @usableFromInline
-  internal let color: ANSIColorIdentifier
-
-  @usableFromInline
-  internal let intensity: ANSIColorIntensity
-
-  /// Creates an ANSI color with the specified identifier and intensity.
-  ///
-  /// - Parameters:
-  ///   - color: The base color identifier.
-  ///   - intensity: The color intensity. Defaults to `.normal`.
-  public init(color: ANSIColorIdentifier, intensity: ANSIColorIntensity = .normal) {
-    self.color = color
-    self.intensity = intensity
-  }
-}
-
-extension ANSIColor {
-  /// The terminal's default color as configured by the user.
-  ///
-  /// This respects terminal color schemes and accessibility settings,
-  /// making it the best choice for primary text that should integrate
-  /// naturally with the user's environment.
-  public static var `default`: ANSIColor {
-    ANSIColor(color: .default, intensity: .normal)
-  }
-
-  public static var black: ANSIColor {
-    ANSIColor(color: .black, intensity: .normal)
-  }
-
-  public static var red: ANSIColor {
-    ANSIColor(color: .red, intensity: .normal)
-  }
-
-  public static var green: ANSIColor {
-    ANSIColor(color: .green, intensity: .normal)
-  }
-
-  public static var yellow: ANSIColor {
-    ANSIColor(color: .yellow, intensity: .normal)
-  }
-
-  public static var blue: ANSIColor {
-    ANSIColor(color: .blue, intensity: .normal)
-  }
-
-  public static var magenta: ANSIColor {
-    ANSIColor(color: .magenta, intensity: .normal)
-  }
-
-  public static var cyan: ANSIColor {
-    ANSIColor(color: .cyan, intensity: .normal)
-  }
-
-  public static var white: ANSIColor {
-    ANSIColor(color: .white, intensity: .normal)
-  }
 }
 
 /// Terminal color representation supporting both ANSI and RGB color spaces.
@@ -140,7 +62,7 @@ public enum VTColor: Equatable, Hashable, Sendable {
   /// A 24-bit RGB color with precise component control.
   case rgb(red: UInt8, green: UInt8, blue: UInt8)
   /// An ANSI color that adapts to terminal themes and settings.
-  case ansi(ANSIColor)
+  case ansi(_ color: ANSIColor, intensity: ANSIColorIntensity = .normal)
 }
 
 extension VTColor {
