@@ -251,6 +251,11 @@ internal final actor POSIXTerminal: VTTerminal {
     _ = tcsetattr(self.hOut, TCSAFLUSH, &attr)
   }
 
+  public func _restore() {
+    var attr = self.sAttributes
+    _ = tcsetattr(self.hOut, TCSAFLUSH, &attr)
+  }
+
   /// Writes string data directly to the terminal output.
   ///
   /// This method sends UTF-8 encoded string data to the terminal using the
