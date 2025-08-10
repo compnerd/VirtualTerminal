@@ -3,7 +3,7 @@
 import PackageDescription
 
 let _: Package =
-  .init(name: "Cursor",
+  .init(name: "VirtualTerminal",
         platforms: [
           .macOS(.v14),
         ],
