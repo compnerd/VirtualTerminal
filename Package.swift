@@ -16,7 +16,10 @@ let _: Package =
         ],
         targets: [
           .target(name: "Geometry"),
-          .target(name: "Primitives"),
+          .target(name: "Primitives", dependencies: [
+            .product(name: "POSIXCore", package: "swift-platform-core", condition: .when(platforms: [.macOS, .linux])),
+            .product(name: "WindowsCore", package: "swift-platform-core", condition: .when(platforms: [.windows])),
+          ]),
           .target(name: "VirtualTerminal", dependencies: [
             .target(name: "Geometry"),
             .target(name: "Primitives"),
