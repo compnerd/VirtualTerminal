@@ -133,10 +133,12 @@ extension VTBuffer {
 public final class VTRenderer: Sendable {
   /// The underlying platform-specific terminal implementation.
   private let _terminal: PlatformTerminal
+
   /// The currently displayed buffer state (visible to the user).
   package nonisolated(unsafe) var front: VTBuffer
+
   /// The buffer where new content is drawn (back buffer for double buffering).
-  package nonisolated(unsafe) var back: VTBuffer
+  public nonisolated(unsafe) var back: VTBuffer
 
   /// Performance profiler for tracking rendering statistics (optional).
   public private(set) nonisolated(unsafe) var profiler: VTProfiler?
