@@ -5,6 +5,9 @@ import Foundation
 import Geometry
 import Primitives
 import VirtualTerminal
+#if !os(Windows)
+import POSIXCore
+#endif
 
 extension VTBuffer {
   internal var center: Point {
@@ -301,6 +304,23 @@ private func render(statistics: FrameStatistics, into buffer: inout VTBuffer) {
 
 // MARK: - Application
 
+func reset(terminal: some VTTerminal) async {
+  await terminal <<< .ResetMode([.DEC(.UseAlternateScreenBufferSaveCursor)])
+                 <<< .SetMode([.DEC(.TextCursorEnableMode)])
+}
+
+private func reset(terminal: some VTTerminal) {
+#if swift(>=6.2)
+  if #available(macOS 26, *) {
+    Task<Void, Never>.immediate { await reset(terminal: terminal) }
+  } else {
+    Task.synchronously { await reset(terminal: terminal) }
+  }
+#else
+  Task.synchronously { await reset(terminal: terminal) }
+#endif
+}
+
 @main
 private struct VTDemo {
   internal enum ApplicationState {
@@ -384,15 +404,17 @@ private struct VTDemo {
     await terminal <<< .SetMode([.DEC(.UseAlternateScreenBufferSaveCursor)])
                    <<< .ResetMode([.DEC(.TextCursorEnableMode)])
 
-    defer {
-      Task.synchronously {
-        await terminal <<< .SetMode([.DEC(.TextCursorEnableMode)])
-                       <<< .ResetMode([.DEC(.UseAlternateScreenBufferSaveCursor)])
-      }
-    }
+    defer { reset(terminal: terminal) }
 
     try await withThrowingTaskGroup(of: Void.self) { group in
       defer { group.cancelAll() }
+
+#if !os(Windows)
+      let signals = try await SignalHandler.install(SIGINT) { _ in
+        reset(terminal: terminal)
+        _exit(0)
+      }
+#endif
 
       // Input handling task
       group.addTask {
@@ -405,7 +427,7 @@ private struct VTDemo {
       nonisolated(unsafe) var previous: ContinuousClock.Instant?
       nonisolated(unsafe) var profiler = VTProfiler(target: VTDemo.PreferredFPS)
       let link = VTDisplayLink(fps: VTDemo.PreferredFPS) { link in
-        let ΔTime = previous.map { link.timestamp - $0 } ?? .zero 
+        let ΔTime = previous.map { link.timestamp - $0 } ?? .zero
 
         previous = .now
         profiler.measure {
@@ -434,6 +456,10 @@ private struct VTDemo {
       link.add(to: &group)
 
       try await group.next()
+
+#if !os(Windows)
+      signals.remove()
+#endif
     }
   }
 }

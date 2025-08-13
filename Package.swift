@@ -25,5 +25,6 @@ let _: Package =
           ]),
           .executableTarget(name: "VTDemo", dependencies: [
             .target(name: "VirtualTerminal"),
+            .product(name: "POSIXCore", package: "swift-platform-core", condition: .when(platforms: [.macOS, .linux])),
           ]),
         ])
