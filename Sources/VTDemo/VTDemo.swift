@@ -5,6 +5,9 @@ import Foundation
 import Geometry
 import Primitives
 import VirtualTerminal
+#if !os(Windows)
+import POSIXCore
+#endif
 
 extension VTBuffer {
   internal var center: Point {
@@ -301,6 +304,11 @@ private func render(statistics: FrameStatistics, into buffer: inout VTBuffer) {
 
 // MARK: - Application
 
+private func reset(terminal: some VTTerminal) async {
+  await terminal <<< .ResetMode([.DEC(.UseAlternateScreenBufferSaveCursor)])
+                 <<< .SetMode([.DEC(.TextCursorEnableMode)])
+}
+
 @main
 private struct VTDemo {
   internal enum ApplicationState {
@@ -324,11 +332,31 @@ private struct VTDemo {
                    <<< .ResetMode([.DEC(.TextCursorEnableMode)])
 
     defer {
-      Task.synchronously {
-        await terminal <<< .SetMode([.DEC(.TextCursorEnableMode)])
-                       <<< .ResetMode([.DEC(.UseAlternateScreenBufferSaveCursor)])
+#if swift(>=6.2)
+      if #available(macOS 26, *) {
+        Task<Void, Never>.immediate { await reset(terminal: terminal) }
+      } else {
+        Task.synchronously { await reset(terminal: terminal) }
       }
+#else
+      Task.synchronously { await reset(terminal: terminal) }
+#endif
     }
+
+#if !os(Windows)
+    let signals = try await SignalHandler.install(SIGINT) { _ in
+#if swift(>=6.2)
+      if #available(macOS 26, *) {
+        Task<Void, Never>.immediate { await reset(terminal: terminal) }
+      } else {
+        Task.synchronously { await reset(terminal: terminal) }
+      }
+#else
+      Task.synchronously { await reset(terminal: terminal) }
+#endif
+      exit(0)
+    }
+#endif
 
     try await withThrowingTaskGroup(of: Void.self) { group in
       defer { group.cancelAll() }
@@ -423,5 +451,7 @@ private struct VTDemo {
 
       try await group.next()
     }
+
+    signals.remove()
   }
 }
