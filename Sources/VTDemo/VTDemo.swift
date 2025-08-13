@@ -322,13 +322,11 @@ private struct VTDemo {
 
     await terminal <<< .SetMode([.DEC(.UseAlternateScreenBufferSaveCursor)])
                    <<< .ResetMode([.DEC(.TextCursorEnableMode)])
-                   <<< .EraseDisplay(.EntireDisplay)
 
     defer {
       Task.synchronously {
-        await terminal <<< .SelectGraphicRendition([.Reset])
+        await terminal <<< .ResetMode([.DEC(.UseAlternateScreenBufferSaveCursor)])
                        <<< .SetMode([.DEC(.TextCursorEnableMode)])
-                       <<< .ResetMode([.DEC(.UseAlternateScreenBufferSaveCursor)])
       }
     }
 
