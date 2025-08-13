@@ -325,7 +325,6 @@ private struct VTDemo {
 
     defer {
       Task.synchronously {
-        await terminal <<< .ResetMode([.DEC(.UseAlternateScreenBufferSaveCursor)])
         await terminal <<< .SetMode([.DEC(.TextCursorEnableMode)])
                        <<< .ResetMode([.DEC(.UseAlternateScreenBufferSaveCursor)])
       }
