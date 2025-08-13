@@ -316,6 +316,67 @@ private struct VTDemo {
   private static nonisolated(unsafe) var state = ApplicationState.menu
   private static nonisolated(unsafe) var menu = Menu(size: .zero)
 
+  private static func process(_ event: VTEvent,
+                              _ renderer: borrowing VTRenderer) -> Bool {
+    switch event {
+    case .key(let key) where key.type == .press:
+      // Global Key Handling
+      switch key.character {
+      case "q", "Q":
+        return false
+      case "p", "P":
+        statistics.toggle()
+        return true
+      case "m", "M":
+        state = .menu
+        return true
+      default:
+        break
+      }
+
+      // Handle escape key
+      if key.keycode == VTKeyCode.escape {
+        switch VTDemo.state {
+        case .menu:
+          return false
+
+        case .display(_):
+          VTDemo.state = .menu
+          return true
+        }
+      }
+
+      switch VTDemo.state {
+      case .menu:
+        if ["\r", "\n"].contains(key.character) {
+          if let scene = menu.scene {
+            state = .display(scene.init(size: renderer.back.size))
+          }
+          return true
+        }
+
+        for option in Menu.Options {
+          if option.hotkey == key.character {
+            VTDemo.state = .display(option.scene.init(size: renderer.back.size))
+            break
+          }
+        }
+
+        menu.process(input: event)
+
+      case .display(var scene):
+        // Process scene-specific input
+        scene.process(input: event)
+        VTDemo.state = .display(scene)
+      }
+
+    default:
+      break
+    }
+
+    return true
+  }
+
   static func main() async throws {
     let renderer = try await VTRenderer(mode: .raw)
     let terminal = renderer.terminal
@@ -336,56 +397,7 @@ private struct VTDemo {
       // Input handling task
       group.addTask {
         for try await event in terminal.input {
-          switch event {
-          case .key(let key) where key.type == .press:
-            // Global Key Handling
-            switch key.character {
-            case "q", "Q": return
-            case "p", "P": statistics.toggle()
-            case "m", "M":
-              state = .menu
-              continue
-            default:
-              break
-            }
-
-            // Handle escape key
-            if key.keycode == VTKeyCode.escape {
-              switch VTDemo.state {
-              case .menu:
-                return
-
-              case .display(_):
-                VTDemo.state = .menu
-              }
-            }
-
-            switch VTDemo.state {
-            case .menu:
-              if ["\r", "\n"].contains(key.character) {
-                if let scene = menu.scene {
-                  state = .display(scene.init(size: renderer.back.size))
-                }
-                continue
-              }
-
-              for option in Menu.Options {
-                if option.hotkey == key.character {
-                  VTDemo.state = .display(option.scene.init(size: renderer.back.size))
-                  break
-                }
-              }
-
-              menu.process(input: event)
-
-            case .display(var scene):
-              // Process scene-specific input
-              scene.process(input: event)
-              VTDemo.state = .display(scene)
-            }
-
-          default: continue
-          }
+          if !process(event, renderer) { return }
         }
       }
 
