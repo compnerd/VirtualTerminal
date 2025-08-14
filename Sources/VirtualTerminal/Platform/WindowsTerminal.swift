@@ -223,6 +223,10 @@ internal final actor WindowsTerminal: VTTerminal {
     })
   }
 
+  public func _restore() {
+    _ = SetConsoleMode(self.hOut.handle, self.dwMode)
+  }
+
   deinit {
     // Restore the original console mode.
     _ = SetConsoleMode(self.hOut.handle, self.dwMode)

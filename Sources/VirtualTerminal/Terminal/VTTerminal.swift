@@ -61,6 +61,9 @@ public protocol VTTerminal: Actor {
   ///
   /// - Parameter string: The text or escape sequences to write.
   func write(_ string: String)
+
+  /// Manually restore termios attributes.
+  func _restore()
 }
 
 extension VTTerminal {
