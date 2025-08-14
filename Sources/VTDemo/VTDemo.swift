@@ -17,7 +17,7 @@ extension VTBuffer {
 
 // MARK: - Scene
 
-private protocol Scene {
+private protocol Scene: SendableMetatype {
   static var name: String { get }
   static var description: String { get }
 
