@@ -15,6 +15,11 @@ extension VTBuffer {
   }
 }
 
+#if swift(<6.2)
+private protocol SendableMetatype: ~Copyable, ~Escapable {
+}
+#endif
+
 // MARK: - Scene
 
 private protocol Scene: SendableMetatype {
