@@ -1,4 +1,4 @@
-// swift-tools-version:6.0
+// swift-tools-version:6.1
 
 import PackageDescription
 
@@ -12,7 +12,7 @@ let _: Package =
           .library(name: "VirtualTerminal", targets: ["VirtualTerminal"]),
         ],
         dependencies: [
-          .package(url: "https://github.com/zaneenders/swift-platform-core.git", branch: "zane-asahi-linux-patch"),
+          .package(url: "https://github.com/zaneenders/swift-platform-core.git", branch: "zane-asahi-linux-patch", traits: ["GNU"]),
         ],
         targets: [
           .target(name: "Geometry"),
