@@ -7,7 +7,7 @@ extension Task where Failure == Error {
   @discardableResult
   package static func synchronously(priority: TaskPriority? = nil, operation: @escaping @Sendable () async throws -> Success) throws(Failure) -> Success {
     var result: Result<Success, Failure>!
-    
+
     let semaphore = DispatchSemaphore(value: 0)
     Task<Void, Failure>(priority: priority) {
       // This task will run the operation and capture the result.
@@ -21,7 +21,7 @@ extension Task where Failure == Error {
       }
     }
     semaphore.wait()
-    
+
     return try result.get()
   }
 }
@@ -30,14 +30,14 @@ extension Task where Failure == Never {
   @discardableResult
   package static func synchronously(priority: TaskPriority? = nil, operation: @escaping @Sendable () async -> Success) -> Success {
     var result: Success!
-    
+
     let semaphore = DispatchSemaphore(value: 0)
     Task<Void, Never>(priority: priority) {
       defer { semaphore.signal() }
       result = await operation()
     }
     semaphore.wait()
-    
+
     return result
   }
 }
