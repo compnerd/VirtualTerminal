@@ -43,7 +43,7 @@ package struct RingBuffer<Element> {
     } else {
       size += 1
     }
-    
+
     storage[tail] = element
     tail = _index(after: tail)
   }
@@ -125,11 +125,11 @@ extension RingBuffer: Sequence {
   package struct Iterator: IteratorProtocol {
     private let buffer: RingBuffer<Element>
     private var currentIndex: Int = 0
-    
+
     internal init(_ buffer: RingBuffer<Element>) {
       self.buffer = buffer
     }
-    
+
     package mutating func next() -> Element? {
       guard currentIndex < buffer.count else { return nil }
       let element = buffer[currentIndex]
@@ -137,7 +137,7 @@ extension RingBuffer: Sequence {
       return element
     }
   }
-  
+
   package func makeIterator() -> Iterator {
     Iterator(self)
   }
@@ -202,11 +202,11 @@ extension RingBuffer {
   package borrowing func map<U>(_ transform: (borrowing Element) throws -> U) rethrows -> [U] {
     var result: [U] = []
     result.reserveCapacity(count)
-    
+
     try forEach { element in
       result.append(try transform(element))
     }
-    
+
     return result
   }
 
