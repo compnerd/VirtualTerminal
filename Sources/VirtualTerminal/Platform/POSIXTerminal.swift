@@ -221,7 +221,7 @@ internal final actor POSIXTerminal: VTTerminal {
                 return parser.parse(ArraySlice(buffer))
               }
 
-              return sequences.compactMap { $0.event.map { VTEvent.key($0) } }
+              return sequences.compactMap(\.event)
             }
             continuation.yield(events)
           } catch {

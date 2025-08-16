@@ -24,9 +24,17 @@ import Geometry
 /// }
 /// ```
 public enum VTEvent: Equatable, Sendable {
+  /// A keyboard input event.
   case key(KeyEvent)
+
+  /// A mouse input event.
   case mouse(MouseEvent)
+
+  /// A terminal resize event.
   case resize(ResizeEvent)
+
+  /// A device response event.
+  case response(VTDeviceAttributesResponse)
 }
 
 // MARK: - Key Event

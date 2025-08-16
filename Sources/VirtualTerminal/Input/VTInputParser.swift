@@ -72,6 +72,22 @@ internal enum ParseResult<Output> {
   case indeterminate
 }
 
+/// Device attribute response types based on intermediate characters.
+///
+/// Different device attribute queries return different types of information.
+/// The intermediate character in the CSI sequence indicates which type of
+/// response is being provided.
+public enum VTDeviceAttributesResponse: Equatable, Sendable {
+  /// Primary device attributes (DA1) - basic terminal identification
+  case primary([Int])
+
+  /// Secondary device attributes (DA2) - version and capability info
+  case secondary([Int])
+
+  /// Tertiary device attributes (DA3) - unit identification
+  case tertiary([Int])
+}
+
 /// Represents different types of parsed terminal input sequences.
 ///
 /// Terminal input consists of various sequence types, from simple characters
@@ -86,6 +102,7 @@ internal enum ParseResult<Output> {
 internal enum ParsedSequence {
   case character(Character)
   case cursor(direction: Direction, count: Int)
+  case DeviceAttributes(VTDeviceAttributesResponse)
   case function(number: Int, modifiers: KeyModifiers)
   case unknown(sequence: [UInt8])
 }
@@ -307,6 +324,21 @@ extension VTInputParser {
       input = input.dropFirst()
       return parse(next: &input)
 
+    case 0x3d: // '=' (DEC Private Mode)
+      state = .CSI(parameters: parameters, intermediate: intermediate + [byte])
+      input = input.dropFirst()
+      return parse(next: &input)
+
+    case 0x3e: // '>' (DEC Private Mode)
+      state = .CSI(parameters: parameters, intermediate: intermediate + [byte])
+      input = input.dropFirst()
+      return parse(next: &input)
+
+    case 0x3f: // '?' (DEC Private Mode)
+      state = .CSI(parameters: parameters, intermediate: intermediate + [byte])
+      input = input.dropFirst()
+      return parse(next: &input)
+
     case 0x40 ... 0x7e: // command
       state = .normal
       input = input.dropFirst()
@@ -376,7 +408,8 @@ extension VTInputParser {
       }
       input = input.dropFirst(2)
       state = .normal
-      return .success(.unknown(sequence: [0x1b, 0x50] + data), buffer: input)
+      return .success(.unknown(sequence: [0x1b, 0x50] + data + [0x1b, byte]),
+                      buffer: input)
     }
 
     input = input.dropFirst()
@@ -416,6 +449,12 @@ extension VTInputParser {
       return .cursor(direction: .right, count: count)
     case 0x44:  // 'D' (CUB)
       return .cursor(direction: .left, count: count)
+    case 0x63 where intermediate == [0x3f]:  // '\033[?...c' (DA1)
+      return .DeviceAttributes(.primary(parameters))
+    case 0x63 where intermediate == [0x3e]:  // '\033[>...c' (DA2)
+      return .DeviceAttributes(.secondary(parameters))
+    case 0x63 where intermediate == [0x3d]:  // '\033[=...c' (DA3)
+      return .DeviceAttributes(.tertiary(parameters))
     default:
       let sequence: [UInt8] = [UInt8(0x1b), UInt8(0x5b)] + parameters.flatMap { String($0).utf8 } + [UInt8(0x3b)] + intermediate + [command]
       return .unknown(sequence: sequence)
@@ -449,37 +488,35 @@ extension ParsedSequence {
   /// }
   /// ```
   ///
-  /// - Returns: A `KeyEvent` if the sequence represents keyboard input,
-  ///   `nil` otherwise.
-  internal var event: KeyEvent? {
+  /// - Returns: A `VTEvent` if the sequence represents keyboard input,
+  ///   or a terminal response, `nil` otherwise.
+  internal var event: VTEvent? {
     return switch self {
     case let .character(character):
       if character == "\u{1b}" {
-        KeyEvent(character: character, keycode: VTKeyCode.escape, modifiers: [], type: .press)
+        .key(.init(character: character, keycode: VTKeyCode.escape, modifiers: [], type: .press))
       } else {
-        KeyEvent(character: character, keycode: 0, modifiers: [], type: .press)
+        .key(.init(character: character, keycode: 0, modifiers: [], type: .press))
       }
 
     case let .cursor(direction, _):
       switch direction {
       case .up:
-        KeyEvent(character: nil, keycode: VTKeyCode.up, modifiers: [],
-                 type: .press)
+        .key(.init(character: nil, keycode: VTKeyCode.up, modifiers: [], type: .press))
       case .down:
-        KeyEvent(character: nil, keycode: VTKeyCode.down, modifiers: [],
-                 type: .press)
+        .key(.init(character: nil, keycode: VTKeyCode.down, modifiers: [], type: .press))
       case .left:
-        KeyEvent(character: nil, keycode: VTKeyCode.left, modifiers: [],
-                 type: .press)
+        .key(.init(character: nil, keycode: VTKeyCode.left, modifiers: [], type: .press))
       case .right:
-        KeyEvent(character: nil, keycode: VTKeyCode.right, modifiers: [],
-                 type: .press)
+        .key(.init(character: nil, keycode: VTKeyCode.right, modifiers: [], type: .press))
       }
 
+    case let .DeviceAttributes(attributes):
+      .response(attributes)
+
     case let .function(number, modifiers):
-      KeyEvent(character: nil,
-               keycode: UInt16(Int(VTKeyCode.F1) + number - 1),
-               modifiers: modifiers, type: .press)
+      .key(.init(character: nil, keycode: UInt16(Int(VTKeyCode.F1) + number - 1),
+                 modifiers: modifiers, type: .press))
 
     case .unknown(_):
       nil
