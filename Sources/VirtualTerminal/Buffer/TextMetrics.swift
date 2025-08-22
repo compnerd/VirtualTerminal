@@ -5,18 +5,17 @@
 import WindowsCore
 #else
 import POSIXCore
-import Primitives
+import Synchronization
 
 private enum Locale {
-  private static nonisolated(unsafe) var utf8: Atomic<locale_t?> = Atomic(nil)
+  private static nonisolated(unsafe) let utf8: Mutex<locale_t?> = Mutex(nil)
 
-  static var ID_UTF8: locale_t {
-    guard let locale = utf8.load() else {
-      let locale = newlocale(LC_CTYPE_MASK, "en_US.UTF-8", nil)
-      utf8.store(locale)
-      return locale!
+  static var ID_UTF8: locale_t? {
+    return utf8.withLock { locale in
+      if let locale { return locale }
+      locale = newlocale(LC_CTYPE_MASK, "en_US.UTF-8", nil)
+      return locale
     }
-    return locale
   }
 }
 

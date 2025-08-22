@@ -5,7 +5,7 @@
 
 import Geometry
 import POSIXCore
-import Primitives
+import Synchronization
 
 /// POSIX/Unix terminal implementation using standard file descriptors.
 ///
@@ -105,9 +105,9 @@ internal final actor POSIXTerminal: VTTerminal {
   /// ## Note
   /// Window resize detection is not yet implemented (SIGWINCH handler).
   /// The size remains static after terminal initialization.
-  private let _size: Atomic<Size>
+  private let _size: Mutex<Size>
   public nonisolated var size: Size {
-    return _size.load()
+    return _size.withLock { $0 }
   }
 
   /// Creates a new POSIX terminal interface with the specified mode.
@@ -201,7 +201,7 @@ internal final actor POSIXTerminal: VTTerminal {
     guard size.width > 0 && size.height > 0 else {
       throw POSIXError(EINVAL)
     }
-    _size = Atomic(size)
+    _size = Mutex(size)
 
     // TODO(compnerd): setup SIGWINCH handler to update size
 

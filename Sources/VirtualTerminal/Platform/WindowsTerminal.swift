@@ -4,7 +4,7 @@
 #if os(Windows)
 
 import Geometry
-import Primitives
+import Synchronization
 import WindowsCore
 
 /// A Sendable wrapper for Windows HANDLE values.
@@ -95,9 +95,9 @@ internal final actor WindowsTerminal: VTTerminal {
   /// This property reflects the console window size (not the buffer size)
   /// and is updated automatically when console resize events are processed.
   /// The size represents the visible character grid available for output.
-  private let _size: Atomic<Size>
+  private let _size: Mutex<Size>
   public nonisolated var size: Size {
-    return _size.load()
+    return _size.withLock { $0 }
   }
 
   /// Creates a new Windows terminal interface with the specified mode.
@@ -169,7 +169,7 @@ internal final actor WindowsTerminal: VTTerminal {
 
     let size = Size(width: Int(csbi.srWindow.Right - csbi.srWindow.Left + 1),
                     height: Int(csbi.srWindow.Bottom - csbi.srWindow.Top + 1))
-    _size = Atomic(size)
+    _size = Mutex(size)
 
     // Save the original console mode so that we can restore it later.
     self.dwMode = dwMode
