@@ -11,7 +11,7 @@ import POSIXCore
 import Synchronization
 
 private enum Locale {
-  private static nonisolated(unsafe) let utf8: Mutex<locale_t?> = Mutex(nil)
+  private static let utf8: Mutex<locale_t?> = Mutex(nil)
 
   static var ID_UTF8: locale_t? {
     return utf8.withLock { locale in
