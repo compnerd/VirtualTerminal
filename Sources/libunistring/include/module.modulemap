@@ -1,0 +1,8 @@
+/* Copyright © 2025 Saleem Abdulrasool <compnerd@compnerd.org> */
+/* SPDX-License-Identifier: BSD-3-Clause */
+
+module libunistring [system] {
+  header "libunistring.h"
+
+  link "unistring"
+}

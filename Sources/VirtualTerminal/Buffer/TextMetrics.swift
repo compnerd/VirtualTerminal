@@ -4,6 +4,9 @@
 #if os(Windows)
 import WindowsCore
 #else
+#if GNU
+import libunistring
+#endif
 import POSIXCore
 import Synchronization
 
@@ -78,6 +81,12 @@ extension UnicodeScalar {
       return isWideCharacter ? 2 : 1
     }
     return CharType & C3_FULLWIDTH == C3_FULLWIDTH ? 2 : 1
+#elseif GNU
+    // Control character or invalid - zero width    -> -1
+    // Zero-width character (combining marks, etc.) -> 0
+    // Normal width character                       -> 1
+    // Wide character (CJK, etc.)                   -> 2
+    return max(1, Int(uc_width(UInt32(value), "C.UTF-8")))
 #else
     // Control character or invalid - zero width    -> -1
     // Zero-width character (combining marks, etc.) -> 0
