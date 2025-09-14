@@ -25,6 +25,8 @@
 ///     handleMouseInput(mouse)
 ///   case .resize(let resize):
 ///     handleTerminalResize(resize)
+///   case .response(let response):
+///     handleTerminalResponse(response)
 ///   }
 /// }
 /// ```

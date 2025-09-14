@@ -134,6 +134,9 @@ public final class VTRenderer: Sendable {
   /// The underlying platform-specific terminal implementation.
   private let _terminal: PlatformTerminal
 
+  /// The terminal capabilities.
+  private let capabilities: VTCapabilities
+
   /// The currently displayed buffer state (visible to the user).
   package nonisolated(unsafe) var front: VTBuffer
 
@@ -159,6 +162,7 @@ public final class VTRenderer: Sendable {
   /// - Throws: Terminal initialization errors
   public init(mode: VTMode) async throws {
     self._terminal = try await PlatformTerminal(mode: mode)
+    self.capabilities = await VTCapabilities.query(self._terminal)
     self.front = VTBuffer(size: _terminal.size)
     self.back = VTBuffer(size: _terminal.size)
   }
