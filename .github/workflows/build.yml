@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            swift-version: swift-6.1.2-release
+            swift-build: 6.1.2-RELEASE
+            build-args: "--traits GNU"
+
+          - os: macos-latest
+            swift-version: swift-6.1.2-release
+            swift-build: 6.1.2-RELEASE
+            build-args: ""
+
+          - os: windows-latest
+            swift-version: swift-6.1.2-release
+            swift-build: 6.1.2-RELEASE
+            build-args: ""
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: compnerd/gha-setup-swift@main
+        with:
+          swift-version: ${{ matrix.swift-version }}
+          swift-build: ${{ matrix.swift-build }}
+          update-sdk-modules: true
+
+      - if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libunistring-dev
+
+      - name: Show Swift version
+        run: swift --version
+
+      - name: Resolve dependencies
+        run: swift package resolve
+
+      - name: Build
+        run: swift build --configuration debug ${{ matrix.build-args }}
