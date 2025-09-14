@@ -128,3 +128,4 @@ targets: [
 - **Swift 6.0+**
 - **macOS 14+**, **Linux**, or **Windows 10+**
 - Terminal with basic ANSI support (any modern terminal)
+- libunistring is required for Linux GNU
