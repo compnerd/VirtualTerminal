@@ -126,5 +126,5 @@ targets: [
 ## Requirements
 
 - **Swift 6.0+**
-- **macOS 14+**, **Linux**, or **Windows 10+**  
+- **macOS 14+**, **Linux**, or **Windows 10+**
 - Terminal with basic ANSI support (any modern terminal)
