@@ -278,7 +278,11 @@ internal final actor POSIXTerminal: VTTerminal {
   /// - Screen clearing and scrolling commands
   /// - Other VT100/ANSI control sequences
   public func write(_ string: String) {
+#if GNU
+    _ = Glibc.write(self.hOut, string, string.utf8.count)
+#else
     _ = unistd.write(self.hOut, string, string.utf8.count)
+#endif
   }
 }
 
