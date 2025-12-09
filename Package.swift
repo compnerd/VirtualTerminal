@@ -1,11 +1,11 @@
-// swift-tools-version:6.1
+// swift-tools-version:6.2
 
 import PackageDescription
 
 let _: Package =
   .init(name: "VirtualTerminal",
         platforms: [
-          .macOS(.v15),
+          .macOS(.v26),
         ],
         products: [
           .executable(name: "VTDemo", targets: ["VTDemo"]),
