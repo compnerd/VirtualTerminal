@@ -6,6 +6,9 @@
 import Geometry
 import POSIXCore
 import Synchronization
+#if !GNU
+import unistd
+#endif
 
 /// POSIX/Unix terminal implementation using standard file descriptors.
 ///

@@ -1,11 +1,11 @@
-// swift-tools-version:6.1
+// swift-tools-version:6.2
 
 import PackageDescription
 
 let _: Package =
   .init(name: "VirtualTerminal",
         platforms: [
-          .macOS(.v15),
+          .macOS(.v26),
         ],
         products: [
           .executable(name: "VTDemo", targets: ["VTDemo"]),
@@ -20,12 +20,14 @@ let _: Package =
         ],
         targets: [
           .target(name: "libunistring"),
+          .target(name: "xlocale_wrapper"),
           .target(name: "Geometry"),
           .target(name: "Primitives"),
           .target(name: "VirtualTerminal", dependencies: [
             .target(name: "Geometry"),
             .target(name: "Primitives"),
             .target(name: "libunistring", condition: .when(traits: ["GNU"])),
+            .target(name: "xlocale_wrapper", condition: .when(platforms: [.macOS])),
             .product(name: "POSIXCore", package: "swift-platform-core", condition: .when(platforms: [.macOS, .linux])),
             .product(name: "WindowsCore", package: "swift-platform-core", condition: .when(platforms: [.windows])),
           ]),
