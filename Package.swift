@@ -20,12 +20,14 @@ let _: Package =
         ],
         targets: [
           .target(name: "libunistring"),
+          .target(name: "xlocale_wrapper"),
           .target(name: "Geometry"),
           .target(name: "Primitives"),
           .target(name: "VirtualTerminal", dependencies: [
             .target(name: "Geometry"),
             .target(name: "Primitives"),
             .target(name: "libunistring", condition: .when(traits: ["GNU"])),
+            .target(name: "xlocale_wrapper"),
             .product(name: "POSIXCore", package: "swift-platform-core", condition: .when(platforms: [.macOS, .linux])),
             .product(name: "WindowsCore", package: "swift-platform-core", condition: .when(platforms: [.windows])),
           ]),

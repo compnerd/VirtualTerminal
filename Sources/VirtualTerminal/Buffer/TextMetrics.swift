@@ -4,12 +4,22 @@
 #if os(Windows)
 import WindowsCore
 #else
+import POSIXCore
+import Synchronization
+#if canImport(Darwin)
+import Darwin
+import xlocale_wrapper
+#elseif canImport(Glibc)
+import Glibc
+#endif
 #if GNU
 import libunistring
 #endif
 import POSIXCore
 import Synchronization
+#endif
 
+#if canImport(Glibc)
 private enum Locale {
   private static let utf8: Mutex<locale_t?> = Mutex(nil)
 
@@ -21,7 +31,18 @@ private enum Locale {
     }
   }
 }
+#elseif canImport(Darwin)
+private enum Locale {
+  private static let utf8: Mutex<UnsafeMutableRawPointer?> = Mutex(nil)
 
+  static var ID_UTF8: UnsafeMutableRawPointer? {
+    return utf8.withLock { locale in
+      if let locale { return locale }
+      locale = vt_newlocale(LC_CTYPE_MASK, "en_US.UTF-8", nil)
+      return locale
+    }
+  }
+}
 #endif
 
 extension UnicodeScalar {
@@ -87,12 +108,14 @@ extension UnicodeScalar {
     // Normal width character                       -> 1
     // Wide character (CJK, etc.)                   -> 2
     return max(1, Int(uc_width(UInt32(value), "C.UTF-8")))
-#else
+#elseif canImport(Glibc)
     // Control character or invalid - zero width    -> -1
     // Zero-width character (combining marks, etc.) -> 0
     // Normal width character                       -> 1
     // Wide character (CJK, etc.)                   -> 2
     return max(1, Int(wcwidth_l(wchar_t(value), Locale.ID_UTF8)))
+#else
+    return max(1, Int(vt_wcwidth_l(wchar_t(value), Locale.ID_UTF8)))
 #endif
   }
 }
