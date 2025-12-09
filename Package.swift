@@ -27,7 +27,7 @@ let _: Package =
             .target(name: "Geometry"),
             .target(name: "Primitives"),
             .target(name: "libunistring", condition: .when(traits: ["GNU"])),
-            .target(name: "xlocale_wrapper"),
+            .target(name: "xlocale_wrapper", condition: .when(platforms: [.macOS])),
             .product(name: "POSIXCore", package: "swift-platform-core", condition: .when(platforms: [.macOS, .linux])),
             .product(name: "WindowsCore", package: "swift-platform-core", condition: .when(platforms: [.windows])),
           ]),
