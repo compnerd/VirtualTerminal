@@ -11,18 +11,18 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            swift-version: swift-6.1.2-release
-            swift-build: 6.1.2-RELEASE
+            swift-version: swift-6.2-release
+            swift-build: 6.2-RELEASE
             build-args: "--traits GNU"
 
           - os: macos-latest
-            swift-version: swift-6.1.2-release
-            swift-build: 6.1.2-RELEASE
+            swift-version: swift-6.2-release
+            swift-build: 6.2-RELEASE
             build-args: ""
 
           - os: windows-latest
-            swift-version: swift-6.1.2-release
-            swift-build: 6.1.2-RELEASE
+            swift-version: swift-6.2-release
+            swift-build: 6.2-RELEASE
             build-args: ""
 
     runs-on: ${{ matrix.os }}
