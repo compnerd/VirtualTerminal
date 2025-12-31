@@ -279,10 +279,13 @@ internal final actor POSIXTerminal: VTTerminal {
   /// - Other VT100/ANSI control sequences
   public func write(_ string: String) {
 #if GNU
-    _ = Glibc.write(self.hOut, string, string.utf8.count)
+    let pfnWrite = Glibc.write
+#elseif os(macOS)
+    let pfnWrite = Darwin.write
 #else
-    _ = unistd.write(self.hOut, string, string.utf8.count)
+    let pfnWrite = unistd.write
 #endif
+    _ = pfnWrite(self.hOut, string, string.utf8.count)
   }
 }
 
